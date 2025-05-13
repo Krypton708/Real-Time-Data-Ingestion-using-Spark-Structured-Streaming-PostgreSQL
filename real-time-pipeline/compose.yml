@@ -1,1 +1,42 @@
+# The docker compose file for the data engineering project.
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Eliasdaniel7!
+      POSTGRES_DB: ecommerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./scripts/postgres_setup.sql:/docker-entrypoint-initdb.d/postgres_setup.sql
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
 
+# spark streaming
+  spark:
+    image: bitnami/spark:3.5    
+    container_name: spark_streaming
+    depends_on:
+      - postgres
+    volumes:
+      - ./scripts:/app/scripts
+      - ./data:/app/data
+      - ./config:/app/config
+      - ./spark_streaming_to_postgres.py:/app/spark_streaming_to_postgres.py
+    ports:
+      - "4040:4040"
+      - "8080:8080"
+      - "8081:8081"
+    networks:
+      - app-network
+    command: tail -f /dev/null
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
